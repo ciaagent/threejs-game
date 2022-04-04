@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, HostListener, Input, OnInit, ViewChild } from '@angular/core';
 import * as THREE from 'three';
-
+import { GUI } from 'dat.gui'
+import { PointLight } from 'three';
 @Component({
   selector: 'app-cube',
   templateUrl: './cube.component.html',
@@ -11,30 +12,43 @@ export class CubeComponent implements OnInit, AfterViewInit {
   private canvasRef!: ElementRef;
 
   //Cube properties
-  @Input() public rotationSpeedX:  number = 0.005;
+  @Input() public rotationSpeedX:  number = 0;
   @Input() public rotationSpeedY:  number = 0.01;
   @Input() public size:  number = 200;
   @Input() public texture:  string = '/assets/crate.gif';
 
   // Stage properties
-  @Input() public cameraZ:  number = 200;
-  @Input() public fieldOfView:  number = 1;
-  @Input('nearClipping') public nearClippingPlane:  number = 1;
-  @Input('farClipping') public farClippingPlane:  number = 1000;
+  @Input() public cameraZ:  number = 4;
+  @Input() public fieldOfView:  number = 100;
+  @Input('nearClipping') public nearClippingPlane:  number = 0.1;
+  @Input('farClipping') public farClippingPlane:  number = 100;
 
   private camera!: THREE.PerspectiveCamera;
   private loader = new THREE.TextureLoader();
-  private geometry = new THREE.BoxGeometry(1,1,1);
-  private material = new THREE.MeshPhongMaterial({map: this.loader.load(this.texture)});
-  //private material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
-
-  private cube: THREE.Mesh = new THREE.Mesh(this.geometry, this.material);
-
   private renderer!: THREE.WebGLRenderer;
-
   private scene!: THREE.Scene;
 
-  constructor() { }
+
+  private geometry = new THREE.BoxGeometry(1,1,1);
+  //private geometry = new THREE.TorusGeometry( .7, .2, 16, 100 );
+  //private material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
+  private material = new THREE.MeshStandardMaterial({map: this.loader.load(this.texture)});
+  private cube: THREE.Mesh = new THREE.Mesh(this.geometry, this.material);
+
+  // Lighting
+  private ambientLight = new THREE.AmbientLight( 0x222222, 1 );
+  private cameraLight = new THREE.PointLight( 0xffffff, 0.1);
+  private pointLightHelper =new THREE.PointLightHelper(this.cameraLight, 1);
+
+
+  // Debugging stuffs
+  private gui = new GUI();
+  private cubeFolder = this.gui.addFolder('Cube');
+  private cameraFolder = this.gui.addFolder('Camera');
+  private ambientLightFolder = this.gui.addFolder('Ambient Light');
+  private cameraLightFolder = this.gui.addFolder('Camera Light');
+
+  constructor() {}
 
   ngOnInit(): void {
   }
@@ -44,11 +58,12 @@ export class CubeComponent implements OnInit, AfterViewInit {
   }
 
   private createScene(){
-    
+    this.material.metalness = 0.7;
+    this.material.roughness = 0.2;
     // Scene
     this.scene = new THREE.Scene;
-    this.scene.background = new THREE.Color(0x000000);
-    this.scene.add( new THREE.AmbientLight( 0x222222, 1 ) );
+    //this.scene.background = new THREE.Color(0x000000);
+    this.scene.add(this.ambientLight);
     this.scene.add(this.cube);
     //this.scene.add( new THREE.AxesHelper( 20 ) );
     // Camera
@@ -60,9 +75,9 @@ export class CubeComponent implements OnInit, AfterViewInit {
       this.farClippingPlane
     )
     this.camera.position.z = this.cameraZ;
-    const light = new THREE.PointLight( 0x222222, 5);
-    this.camera.add( light );
+    this.camera.add(this.cameraLight);
     this.scene.add(this.camera);
+    this.scene.add(this.pointLightHelper);
   }
 
   private getAspectRatio(): number {
@@ -77,9 +92,9 @@ export class CubeComponent implements OnInit, AfterViewInit {
   private startRenderingLoop(){
     // Renderer
     // Use canvas element in template
-    this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
+    this.renderer = new THREE.WebGLRenderer({canvas: this.canvas, alpha: true});
     this.renderer.setPixelRatio(devicePixelRatio);
-    this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+        this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
 
     let component: CubeComponent = this;
     (function render(){
@@ -89,9 +104,32 @@ export class CubeComponent implements OnInit, AfterViewInit {
     }());
   }
 
+  private loadDebugGUI(): void{
+    this.cubeFolder.add(this.cube.rotation, 'x', 0, Math.PI * 2)
+    this.cubeFolder.add(this.cube.rotation, 'y', 0, Math.PI * 2)
+    this.cubeFolder.add(this.cube.rotation, 'z', 0, Math.PI * 2)
+    this.cubeFolder.open()
+    
+    this.cameraFolder.add(this.camera.position, 'z', 0, 15)
+    this.cameraFolder.open()
+
+    this.ambientLightFolder.add(this.ambientLight, 'intensity', 0, 20);
+    this.ambientLightFolder.open()
+
+    this.cameraLightFolder.add(this.cameraLight, 'intensity', 0, 20);
+    this.cameraLightFolder.add(this.cameraLight.position, 'x', -3, 3, 0.01);
+    this.cameraLightFolder.add(this.cameraLight.position, 'y', -3, 3, 0.01);
+    this.cameraLightFolder.add(this.cameraLight.position, 'z', -20, 3, 0.01);
+    this.cameraLightFolder.open()
+  }
+
   ngAfterViewInit(): void {
     this.createScene();
     this.startRenderingLoop();
+    
+    // Debug GUI
+    this.loadDebugGUI();
+
   }
 
   @HostListener('window:resize', ['$event'])
