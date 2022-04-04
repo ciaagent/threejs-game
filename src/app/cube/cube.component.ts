@@ -63,12 +63,6 @@ export class CubeComponent implements OnInit, AfterViewInit {
     const light = new THREE.PointLight( 0x222222, 5);
     this.camera.add( light );
     this.scene.add(this.camera);
-
-    // controls
-    // const controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
-    // controls.minDistance = 20;
-    // controls.maxDistance = 50;
-    // controls.maxPolarAngle = Math.PI / 2;
   }
 
   private getAspectRatio(): number {
@@ -96,8 +90,6 @@ export class CubeComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
     this.createScene();
     this.startRenderingLoop();
   }
@@ -106,16 +98,9 @@ export class CubeComponent implements OnInit, AfterViewInit {
   onResize(event: Event) {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
-    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.aspect = this.canvas.width / this.canvas.height;
 		this.camera.updateProjectionMatrix();
-    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    this.renderer.setSize( this.canvas.width, this.canvas.height );
   }
-
-  // onDocumentMouseMove( event: MouseEvent ) {
-
-  //   mouseX = ( event.clientX - windowHalfX );
-  //   mouseY = ( event.clientY - windowHalfY );
-
-  // }
 
 }
