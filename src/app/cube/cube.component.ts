@@ -18,7 +18,7 @@ export class CubeComponent implements OnInit, AfterViewInit {
   @Input() public texture:  string = '/assets/crate.gif';
 
   // Stage properties
-  @Input() public cameraZ:  number = 4;
+  @Input() public cameraZ:  number = 2;
   @Input() public fieldOfView:  number = 100;
   @Input('nearClipping') public nearClippingPlane:  number = 0.1;
   @Input('farClipping') public farClippingPlane:  number = 100;
@@ -36,7 +36,7 @@ export class CubeComponent implements OnInit, AfterViewInit {
   private cube: THREE.Mesh = new THREE.Mesh(this.geometry, this.material);
 
   // Lighting
-  private ambientLight = new THREE.AmbientLight( 0x222222, 1 );
+  private ambientLight = new THREE.AmbientLight( 0x222222, 12 );
   private cameraLight = new THREE.PointLight( 0xffffff, 0.1);
   private pointLightHelper =new THREE.PointLightHelper(this.cameraLight, 1);
 
@@ -46,7 +46,7 @@ export class CubeComponent implements OnInit, AfterViewInit {
   private cubeFolder = this.gui.addFolder('Cube');
   private cameraFolder = this.gui.addFolder('Camera');
   private ambientLightFolder = this.gui.addFolder('Ambient Light');
-  private cameraLightFolder = this.gui.addFolder('Camera Light');
+  private cameraLightFolder = this.gui.addFolder('Spot Light');
 
   constructor() {}
 
@@ -58,6 +58,7 @@ export class CubeComponent implements OnInit, AfterViewInit {
   }
 
   private createScene(){
+    this.cameraLight.position.set(2.52, 0.86, -0.87);
     this.material.metalness = 0.7;
     this.material.roughness = 0.2;
     // Scene
